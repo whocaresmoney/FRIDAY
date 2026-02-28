@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Friday Trading Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d0f14;
+    color: #e0e0e0;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 { font-size: 13px; color: #555; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 24px; }
+  h1 span { color: #7c6af7; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+  .card {
+    background: #13151c; border: 1px solid #1e2130;
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .card-label { font-size: 10px; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .card-value { font-size: 26px; font-weight: 700; color: #fff; }
+  .card-value.sm { font-size: 18px; }
+  .card-value.green { color: #34d399; }
+  .card-value.red   { color: #f87171; }
+  .card-value.yellow{ color: #fbbf24; }
+  .card-value.gray  { color: #666; }
+  .card-sub { font-size: 11px; color: #555; margin-top: 4px; }
+
+  .positions-card {
+    background: #13151c; border: 1px solid #1e2130;
+    border-radius: 12px; padding: 18px 20px; margin-bottom: 12px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; color: #444; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 0 8px 10px 0; font-weight: normal; }
+  td { padding: 9px 8px 9px 0; border-top: 1px solid #1a1d27; vertical-align: middle; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .badge.short { background: #3d1515; color: #f87171; }
+  .badge.long  { background: #0d3322; color: #34d399; }
+  .tag-sync { font-size: 9px; color: #7c6af7; background: #1a1730; padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+
+  /* 价格进度条 (止盈 ←→ 止损) */
+  .range-bar-wrap {
+    position: relative; background: #0d0f14;
+    border-radius: 6px; height: 6px; margin: 16px 0 4px 0;
+  }
+  .range-bar-fill { height: 6px; border-radius: 6px; transition: width 0.8s ease; }
+  .range-bar-fill.profit { background: linear-gradient(90deg, #059669, #34d399); }
+  .range-bar-fill.loss   { background: linear-gradient(90deg, #991b1b, #f87171); }
+  .range-labels { display: flex; justify-content: space-between; font-size: 10px; color: #444; }
+
+  .log-card { background: #13151c; border: 1px solid #1e2130; border-radius: 12px; padding: 18px 20px; }
+  .log-entries { font-size: 11px; color: #555; line-height: 1.9; max-height: 130px; overflow-y: auto; }
+  .log-entries .ok   { color: #34d399; }
+  .log-entries .err  { color: #f87171; }
+  .log-entries .info { color: #7c6af7; }
+  .log-entries .warn { color: #fbbf24; }
+  .log-entries .hold { color: #94a3b8; }
+
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #34d399; margin-right: 6px; animation: pulse 2s infinite; }
+  .dot.red { background: #f87171; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+
+  .footer { font-size: 10px; color: #2a2d3a; margin-top: 16px; text-align: right; }
+  .footer span { color: #444; }
+
+  .no-pos { color: #333; padding: 20px 0; text-align: center; font-size: 12px; }
+
+  .liq-warn { color: #fbbf24; font-size: 10px; }
+</style>
+</head>
+<body>
+
+<h1><span>Friday</span> · Trading Dashboard · ETH/USDT</h1>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-label">ETH 现价</div>
+    <div class="card-value" id="eth-price">—</div>
+    <div class="card-sub" id="eth-change">—</div>
+  </div>
+  <div class="card">
+    <div class="card-label">总浮盈亏</div>
+    <div class="card-value" id="total-pnl">—</div>
+    <div class="card-sub" id="total-pnl-sub">—</div>
+  </div>
+  <div class="card">
+    <div class="card-label">账户余额</div>
+    <div class="card-value sm" id="balance">—</div>
+    <div class="card-sub" id="balance-sub">可用保证金</div>
+  </div>
+  <div class="card">
+    <div class="card-label">资金费率</div>
+    <div class="card-value sm" id="funding">—</div>
+    <div class="card-sub" id="funding-time">—</div>
+  </div>
+</div>
+
+<div class="positions-card">
+  <div class="card-label"><span class="dot" id="dot"></span>持仓监控 <span id="sync-tag" class="tag-sync" style="display:none">已同步链上</span></div>
+  <table>
+    <thead>
+      <tr>
+        <th>方向</th>
+        <th>入场均价</th>
+        <th>数量</th>
+        <th>移动止损</th>
+        <th>止盈</th>
+        <th>强平价</th>
+        <th>浮盈亏</th>
+        <th>距止损</th>
+        <th>距止盈</th>
+      </tr>
+    </thead>
+    <tbody id="positions-body">
+      <tr><td colspan="9" class="no-pos">加载中...</td></tr>
+    </tbody>
+  </table>
+
+  <div id="range-section" style="display:none">
+    <div class="range-bar-wrap">
+      <div class="range-bar-fill" id="range-fill" style="width:50%"></div>
+    </div>
+    <div class="range-labels">
+      <span id="tp-label">止盈</span>
+      <span style="color:#666">← 价格区间 →</span>
+      <span id="sl-label">止损</span>
+    </div>
+  </div>
+</div>
+
+<div class="log-card">
+  <div class="card-label">监控日志</div>
+  <div class="log-entries" id="log-entries">加载中...</div>
+</div>
+
+<div class="footer">自动刷新每 10 秒 · 上次更新 <span id="last-update">—</span></div>
+
+<script>
+let prevPrice = null;
+
+function fmt(n, d=2) {
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+function sign(n) { return n >= 0 ? '+' : ''; }
+function cls(n)  { return n >= 0 ? 'green' : 'red'; }
+
+async function fetchJSON(url) {
+  const r = await fetch(url + '?t=' + Date.now());
+  return r.json();
+}
+
+async function fetchText(url) {
+  const r = await fetch(url + '?t=' + Date.now());
+  return r.text();
+}
+
+function classifyLog(line) {
+  if (line.includes('✅') || line.includes('止盈')) return 'ok';
+  if (line.includes('❌') || line.includes('止损') || line.includes('ERROR')) return 'err';
+  if (line.includes('📉') || line.includes('移动止损') || line.includes('🔄')) return 'info';
+  if (line.includes('WARN') || line.includes('失败')) return 'warn';
+  if (line.includes('[持仓]') || line.includes('[无持仓]')) return 'hold';
+  return 'hold';
+}
+
+async function update() {
+  try {
+    // 1. ETH 价格 + 资金费率（走本地代理避免 CORS）
+    const mkt = await fetchJSON('/api/eth-price');
+    const price = parseFloat(mkt.markPrice);
+    const funding = parseFloat(mkt.lastFundingRate) * 100;
+    const nextFunding = new Date(mkt.nextFundingTime);
+
+    const priceEl = document.getElementById('eth-price');
+    if (prevPrice !== null) {
+      const d = price - prevPrice;
+      priceEl.className = 'card-value ' + cls(d);
+      document.getElementById('eth-change').textContent =
+        (d >= 0 ? '▲' : '▼') + ' $' + Math.abs(d).toFixed(2) + ' vs last refresh';
+    }
+    priceEl.textContent = '$' + fmt(price);
+    prevPrice = price;
+
+    const fEl = document.getElementById('funding');
+    fEl.textContent = sign(funding) + funding.toFixed(4) + '%';
+    fEl.className = 'card-value sm ' + (funding >= 0 ? 'yellow' : 'green');
+    const mins = Math.round((nextFunding - Date.now()) / 60000);
+    document.getElementById('funding-time').textContent = `下次结算 ${mins} 分钟后`;
+
+    // 2. 读 position.json（本地 HTTP server 提供）
+    let positions = [];
+    try {
+      positions = await fetchJSON('/position.json');
+    } catch(e) {}
+
+    const hasSynced = positions.some(p => p.note && p.note.includes('同步'));
+    document.getElementById('sync-tag').style.display = hasSynced ? 'inline' : 'none';
+    document.getElementById('dot').className = positions.length > 0 ? 'dot' : 'dot red';
+
+    let totalPnl = 0;
+    let rows = '';
+
+    if (positions.length === 0) {
+      rows = '<tr><td colspan="9" class="no-pos" style="color:#333">无持仓</td></tr>';
+      document.getElementById('range-section').style.display = 'none';
+    } else {
+      // 合并所有仓位的止损止盈（取最严/最优）
+      const allSL = positions.map(p => p.stop_loss);
+      const allTP = positions.map(p => p.take_profit);
+      const worstSL = Math.max(...allSL);  // 空单：最高止损
+      const bestTP  = Math.min(...allTP);  // 空单：最低止盈
+
+      positions.forEach(p => {
+        const dir = p.direction;
+        const pnlPct = dir === 'short'
+          ? (p.entry - price) / p.entry
+          : (price - p.entry) / p.entry;
+        const pnlUsd = pnlPct * p.notional;
+        totalPnl += pnlUsd;
+
+        const distSL = dir === 'short'
+          ? (p.stop_loss - price) / price * 100
+          : (price - p.stop_loss) / price * 100;
+        const distTP = dir === 'short'
+          ? (price - p.take_profit) / price * 100
+          : (p.take_profit - price) / price * 100;
+
+        const liqPrice = p.liq_price ? '$' + fmt(p.liq_price) : '—';
+        const liqWarn = p.liq_price && (
+          (dir === 'short' && price > p.liq_price * 0.95) ||
+          (dir === 'long'  && price < p.liq_price * 1.05)
+        );
+
+        const trailBadge = p.lowest_price && p.lowest_price < p.entry
+          ? `<span style="font-size:9px;color:#7c6af7;margin-left:3px">↓${fmt(p.lowest_price)}</span>` : '';
+
+        rows += `<tr>
+          <td><span class="badge ${dir}">${dir.toUpperCase()}</span></td>
+          <td>$${fmt(p.entry)}</td>
+          <td>${fmt(p.size, 4)} ETH</td>
+          <td style="color:#f87171">$${fmt(p.stop_loss)}${trailBadge}</td>
+          <td style="color:#34d399">$${fmt(p.take_profit)}</td>
+          <td class="${liqWarn ? 'liq-warn' : ''}">${liqPrice}</td>
+          <td style="color:${pnlUsd>=0?'#34d399':'#f87171'};font-weight:600">
+            ${sign(pnlUsd)}$${fmt(Math.abs(pnlUsd))}
+            <span style="font-size:10px;color:#555">(${sign(pnlPct*100)}${(pnlPct*100).toFixed(2)}%)</span>
+          </td>
+          <td style="color:${distSL<1?'#fbbf24':'#888'}">${fmt(distSL, 2)}%</td>
+          <td style="color:#888">${fmt(distTP, 2)}%</td>
+        </tr>`;
+      });
+
+      // 进度条
+      const range = worstSL - bestTP;
+      const pct = range > 0 ? Math.min(100, Math.max(0, (worstSL - price) / range * 100)) : 50;
+      const fill = document.getElementById('range-fill');
+      fill.style.width = pct + '%';
+      fill.className = 'range-bar-fill ' + (pct > 50 ? 'profit' : 'loss');
+      document.getElementById('tp-label').textContent = `止盈 $${fmt(bestTP)}`;
+      document.getElementById('sl-label').textContent = `止损 $${fmt(worstSL)}`;
+      document.getElementById('range-section').style.display = 'block';
+    }
+
+    document.getElementById('positions-body').innerHTML = rows;
+
+    // 总盈亏
+    const pnlEl = document.getElementById('total-pnl');
+    pnlEl.textContent = sign(totalPnl) + '$' + fmt(Math.abs(totalPnl));
+    pnlEl.className = 'card-value ' + cls(totalPnl);
+    document.getElementById('total-pnl-sub').textContent =
+      positions.length > 0
+        ? `${positions.length} 笔持仓 · 名义 $${fmt(positions.reduce((s,p)=>s+p.notional,0))}`
+        : '无持仓';
+
+    // 3. 账户余额（走代理读 Lighter）
+    try {
+      const acct = await fetchJSON('/api/account');
+      const bal = acct.collateral || 0;
+      const total = acct.total_asset_value || 0;
+      const balEl = document.getElementById('balance');
+      balEl.textContent = '$' + fmt(bal);
+      balEl.className = 'card-value sm ' + (bal > 50 ? 'green' : 'yellow');
+      document.getElementById('balance-sub').textContent = `总资产 $${fmt(total)}`;
+    } catch(e) {
+      document.getElementById('balance').textContent = '—';
+    }
+
+    // 4. 读日志末尾
+    try {
+      const logText = await fetchText('/monitor.log');
+      const lines = logText.trim().split('\n').filter(Boolean).slice(-12).reverse();
+      document.getElementById('log-entries').innerHTML = lines.map(l => {
+        const c = classifyLog(l);
+        return `<div class="${c}">${l.replace(/</g,'&lt;')}</div>`;
+      }).join('');
+    } catch(e) {}
+
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString('zh');
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+update();
+setInterval(update, 10000);
+</script>
+</body>
+</html>

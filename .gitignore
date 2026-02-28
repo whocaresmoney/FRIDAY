@@ -1,0 +1,6 @@
+.env
+*.token
+*.key
+*.secret
+node_modules/
+media/
