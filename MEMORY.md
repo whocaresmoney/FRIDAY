@@ -12,6 +12,14 @@
 - **本地 LLM：** Mac Mini + LM Studio，Qwen 2.5:7b
 
 
+## 数据源
+- 币安 API（价格）、Brave Search（新闻）、Etherscan（链上）、X 浏览器登录、律动 BlockBeats（中文快讯）
+- Arkham 放弃（企业级付费）
+
+## GitHub 备份
+- repo: github.com/whocaresmoney/FRIDAY（私有）
+- workspace 已配置 git，定期 push
+
 ## 重要原则
 1. 不做欺骗/违法的事（拒绝过德州扑克作弊）
 2. 敏感信息不在 Telegram/文本传输

@@ -10,7 +10,10 @@ _Learn about the person you're helping. Update this as you go._
 
 ## Context
 
-_(What do they care about? What projects are they working on? What annoys them? What makes them laugh? Build this over time.)_
+- **幸运数字：** 76
+- 关注加密货币：BTC/ETH/SOL
+- X 账号：@WhoCaresMoney
+- 会做合约交易（做空ETH等）
 
 ---
 
