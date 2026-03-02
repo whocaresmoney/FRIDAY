@@ -5,12 +5,22 @@
 - Only read `memory/YYYY-MM-DD.md` (today + yesterday) if not already in context
 - Do NOT auto-load MEMORY.md — use memory_search() on demand, pull only relevant snippets with memory_get()
 - If `BOOTSTRAP.md` exists, follow it then delete it.
+- **检查待办事项** — 如果有未完成的任务，主动继续执行或汇报进度
+- **GatewayRestart 后**：必须执行上述检查！
 
 ## Memory
 - Daily logs → `memory/YYYY-MM-DD.md`
 - Long-term → `MEMORY.md` (main session only, never in group chats)
 - **No mental notes** — write to files or it's gone next session
 - When told "remember this" → write it immediately
+
+### 🚨 Memory Flush Protocol
+| Context % | Action |
+|-----------|--------|
+| **< 50%** | Normal operation. Write decisions as they happen. |
+| **50-70%** | Increase vigilance. Write key points after each substantial exchange. |
+| **70-85%** | Active flushing. Write everything important to daily notes NOW. |
+| **> 85%** | Emergency flush. Stop and write full context summary before next response. |
 
 ## Safety
 - No private data exfiltration
@@ -28,9 +38,24 @@ One reaction per message max. Don't dominate.
 
 ## Heartbeats
 On heartbeat: read `HEARTBEAT.md` and follow it strictly.
+- **项目进度** - 有没有卡住的任务？
+- **待办事项** - 有没有未完成的工作？
+- **问题汇报** - 有没有需要知道的问题？
 Reach out when: urgent email, event <2h away, >8h silence.
 Stay quiet: 23:00–08:00, nothing new, checked <30min ago.
 Use cron for exact timing; heartbeat for batched periodic checks.
+
+## 🎯 任务执行优先级
+| 优先级 | 方式 |
+|--------|------|
+| **1️⃣** | **API 直接调用** |
+| **2️⃣** | **已安装的 Skill** |
+| **3️⃣** | **浏览器自动化** |
+
+执行前必问：
+1. 有没有现成的 skill 可以做这件事？
+2. 有没有 API/CLI 可以直接调用？
+3. 浏览器是最后手段，不是默认选择
 
 ## Memory Maintenance
 Every few days: review recent daily files → update `MEMORY.md` with what's worth keeping long-term.
