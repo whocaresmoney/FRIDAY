@@ -13,6 +13,7 @@ _Learn about the person you're helping. Update this as you go._
 - **幸运数字：** 76
 - 关注加密货币：BTC/ETH/SOL
 - X 账号：@WhoCaresMoney
+- 关注博主：@TedPillows、@AshCrypto、@Pathusa
 - 会做合约交易（做空ETH等）
 - 合约习惯：$10,000 本金、10x 杠杆、止损容忍 $500-$1,000、凭感觉入场
 - 交易心理：敢亏不敢赢，浮亏死扛，浮盈急跑

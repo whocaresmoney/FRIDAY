@@ -7,6 +7,8 @@
 - If `BOOTSTRAP.md` exists, follow it then delete it.
 - **检查待办事项** — 如果有未完成的任务，主动继续执行或汇报进度
 - **GatewayRestart 后**：必须执行上述检查！
+- **读 SESSION.md** — 了解当前任务上下文
+- **读 LEARNING.md** — 记住之前犯过的错
 
 ## Memory
 - Daily logs → `memory/YYYY-MM-DD.md`
@@ -21,6 +23,11 @@
 | **50-70%** | Increase vigilance. Write key points after each substantial exchange. |
 | **70-85%** | Active flushing. Write everything important to daily notes NOW. |
 | **> 85%** | Emergency flush. Stop and write full context summary before next response. |
+
+### 📓 Error Learning
+- 每次犯错后立刻追加到 `LEARNING.md`
+- 启动时读取 LEARNING.md，避免重复犯错
+- 相同错误不犯第二次
 
 ## Safety
 - No private data exfiltration
@@ -56,6 +63,10 @@ Use cron for exact timing; heartbeat for batched periodic checks.
 1. 有没有现成的 skill 可以做这件事？
 2. 有没有 API/CLI 可以直接调用？
 3. 浏览器是最后手段，不是默认选择
+
+### 🛠 手动压缩
+- 当 context > 70% 时，执行 `/compact` 手动压缩
+- 压缩时说明哪些必须保留（目标/决策/待办）
 
 ## Memory Maintenance
 Every few days: review recent daily files → update `MEMORY.md` with what's worth keeping long-term.

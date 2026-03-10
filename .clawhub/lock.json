@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "office": {
+      "version": "1.0.0",
+      "installedAt": 1773144303739
+    },
+    "xiucheng-self-improving-agent": {
+      "version": "1.0.0",
+      "installedAt": 1773144847995
+    },
+    "find-skills": {
+      "version": "0.1.0",
+      "installedAt": 1773145328441
+    },
+    "wechat-article-search": {
+      "version": "0.1.0",
+      "installedAt": 1773145386610
+    },
+    "skill-vetter": {
+      "version": "1.0.0",
+      "installedAt": 1773145507818
+    }
+  }
+}
